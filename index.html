@@ -323,6 +323,16 @@
   }
   .repasse .card-foot{ padding-top: 10px; }
 
+  .comprovante-link{
+    display:block;
+    margin-top: 4px;
+    font-size: 0.62rem;
+    text-decoration: none;
+    color: var(--ink-soft);
+    border-bottom: 1px dotted var(--ink-soft);
+  }
+  .comprovante-link:hover{ color: var(--stamp-green); border-color: var(--stamp-green); }
+
   /* ---------- footer ---------- */
   footer{
     text-align:center;
@@ -418,6 +428,12 @@ const CONFIG = {
    São 4 parcelas de 900 (3600 / 4). Troque true/false conforme
    for pagando. */
 const pagamentoChacara = [true, false, false, false];
+
+/* Comprovantes do Pix de cada parcela do repasse (mesma ordem
+   Set/Out/Nov/Dez). Deixe uma imagem/PDF na pasta "comprovantes"
+   do repositório e coloque o caminho aqui, ex: "comprovantes/set.jpg".
+   Deixe "" (vazio) se ainda não tiver o comprovante daquele mês. */
+const comprovantesChacara = ["", "", "", ""];
 
 const pessoas = [
   { nome: "José Lucas",    pagamentos: [true, false, false, false] },
@@ -521,12 +537,13 @@ function renderRepasse(){
     <div class="stamp ${pago ? 'paid' : ''}">
       <div class="circle">${pago ? '✓' : CONFIG.meses[i]}</div>
       <small>${CONFIG.meses[i]}</small>
+      ${comprovantesChacara[i] ? `<a class="comprovante-link" href="${comprovantesChacara[i]}" target="_blank" rel="noopener">📎 comprovante</a>` : ''}
     </div>
   `).join('');
 
   document.getElementById('repasse').innerHTML = `
     <div class="repasse-head">
-      <h3>Pix pro dono da chácara ${completo ? '— quitado!' : ''}</h3>
+      <h3>💸 Pix pro dono da chácara ${completo ? '— quitado!' : ''}</h3>
       <small>${CONFIG.mesesNomes.join(' · ')}</small>
     </div>
     <div class="stamps">${stampsHtml}</div>
