@@ -288,6 +288,41 @@
   }
   .card-foot b{ color: var(--ink); }
 
+  /* ---------- repasse pro dono da chácara ---------- */
+  .repasse{
+    background: var(--paper);
+    color: var(--ink);
+    border-radius: var(--radius-card);
+    padding: 18px 20px 16px;
+    box-shadow: 0 8px 0 -4px var(--paper-shadow), 0 10px 18px rgba(0,0,0,0.28);
+    margin-bottom: 8px;
+  }
+  .repasse-head{
+    display:flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .repasse-head h3{
+    font-family:'Fraunces', serif;
+    font-size: 1.15rem;
+    margin: 0;
+  }
+  .repasse-head small{
+    color: var(--ink-soft);
+    font-size: 0.8rem;
+  }
+  .repasse .stamps{
+    max-width: 420px;
+  }
+  .repasse .stamp .circle{
+    width: 44px; height:44px;
+    font-size: 0.95rem;
+  }
+  .repasse .card-foot{ padding-top: 10px; }
+
   /* ---------- footer ---------- */
   footer{
     text-align:center;
@@ -341,6 +376,18 @@
     </div>
   </section>
 
+  <div class="grid-label">Saldo em caixa</div>
+  <section class="hero" id="saldoHero">
+    <div class="hero-top">
+      <div class="hero-amount" id="saldoAmount">R$ 0 <span>em caixa</span></div>
+      <div class="hero-tag" id="saldoTag">arrecadado − repassado</div>
+    </div>
+    <div class="bar-track"><div class="bar-fill" id="saldoBarFill" style="width:0%"></div></div>
+  </section>
+
+  <div class="grid-label">Repasse pro dono da chácara</div>
+  <div class="repasse" id="repasse"></div>
+
   <div class="grid-label">Set · Out · Nov · Dez</div>
   <div class="grid" id="grid"></div>
 
@@ -366,6 +413,11 @@ const CONFIG = {
   meses: ["Set", "Out", "Nov", "Dez"],
   mesesNomes: ["Setembro", "Outubro", "Novembro", "Dezembro"]
 };
+
+/* Repasse que EU faço via Pix pro dono da chácara, todo mês.
+   São 4 parcelas de 900 (3600 / 4). Troque true/false conforme
+   for pagando. */
+const pagamentoChacara = [true, false, false, false];
 
 const pessoas = [
   { nome: "José Lucas",    pagamentos: [true, false, false, false] },
@@ -443,6 +495,48 @@ function render(){
   document.getElementById('statQuitados').textContent = `${quitados}/${totalPessoas}`;
 }
 
+function renderSaldo(){
+  const arrecadado = pessoas.reduce((acc, p) => acc + p.pagamentos.filter(Boolean).length * CONFIG.valorParcela, 0);
+  const valorParcelaRepasse = CONFIG.valorChacara / 4;
+  const repassado = pagamentoChacara.filter(Boolean).length * valorParcelaRepasse;
+  const saldo = arrecadado - repassado;
+  const pct = Math.min(100, Math.round((Math.abs(saldo) / CONFIG.valorChacara) * 100));
+
+  document.getElementById('saldoAmount').innerHTML = `${fmt(saldo)} <span>em caixa</span>`;
+  document.getElementById('saldoTag').textContent = `${fmt(arrecadado)} arrecadado − ${fmt(repassado)} repassado`;
+
+  const fill = document.getElementById('saldoBarFill');
+  fill.style.width = pct + '%';
+  fill.style.background = saldo < 0
+    ? 'linear-gradient(90deg, #8a3b2a, var(--terracotta))'
+    : 'linear-gradient(90deg, var(--stamp-green), var(--gold))';
+}
+
+function renderRepasse(){
+  const valorParcelaRepasse = CONFIG.valorChacara / 4;
+  const pagas = pagamentoChacara.filter(Boolean).length;
+  const completo = pagas === 4;
+
+  const stampsHtml = pagamentoChacara.map((pago, i) => `
+    <div class="stamp ${pago ? 'paid' : ''}">
+      <div class="circle">${pago ? '✓' : CONFIG.meses[i]}</div>
+      <small>${CONFIG.meses[i]}</small>
+    </div>
+  `).join('');
+
+  document.getElementById('repasse').innerHTML = `
+    <div class="repasse-head">
+      <h3>💸 Pix pro dono da chácara ${completo ? '— quitado!' : ''}</h3>
+      <small>${CONFIG.mesesNomes.join(' · ')}</small>
+    </div>
+    <div class="stamps">${stampsHtml}</div>
+    <div class="card-foot">
+      <span>${pagas}/4 parcelas repassadas</span>
+      <b>${fmt(pagas * valorParcelaRepasse)} / ${fmt(CONFIG.valorChacara)}</b>
+    </div>
+  `;
+}
+
 function renderLights(){
   const g = document.getElementById('bulbs');
   const xs = [0,60,120,180,240,300,360,420,480,540,600,660,720,780,840,900,960];
@@ -458,6 +552,8 @@ function renderLights(){
 }
 
 render();
+renderSaldo();
+renderRepasse();
 renderLights();
 </script>
 
